@@ -1,13 +1,6 @@
 #!/usr/bin/env lem
 -- -*- coding: utf-8 -*-
 
--- libjason-xs-perl
--- curl -s http | jason-xs
-
--- netstat -lnptu | grep LISTEN | grep lem
--- lsof -p 27490 | grep TCP
--- nmap localhost
-
 local function usage()
    print('This is the Powermeter daemon')
    print('usage:    ' .. arg[0] .. '\'bind\'')
@@ -94,15 +87,10 @@ do
    end
 end
 
-local function logfile(message)
-   -- write message to file
-   local file = io.open("time-server.log", "a")
-   file:write(message)
-   file:flush()
-   file:close()
-end
+
 
 local function socket_handler(client)
+-- socket:autospawn(function(client)
 
       local db = assert(postgres.connect(pg_connect_str))
       local now = utils.now
@@ -114,45 +102,18 @@ local function socket_handler(client)
     local line = client:read('*l')
 
     if not line then break end
-
-    reading  = parse_reading(line)
-    -- Time toilet is occupied
-    reading.stamp = format('%0.f', now() * 1000) - reading.ms
-    --local stamp = format('%0.f', now() * 1000) - ms
-
-    if reading.type == "log" then
-       if reading.id == "t1" then
-          put_blipv1(stamp, ms)
-       elseif reading.id == "t2" then
-          put_blipv2(stamp, ms)
-       end
-       assert(db:run('put', reading.id, reading.stamp, reading.ms))
-    elseif reading.type == "state" then
-       -- FREE == 0, BUSY == 1
-       
-    else
-       -- Wrong type - log the incident and the wrongly recieved data
-       logfile(format('## error, recieved %s(type), %s(id), %s(ms), %s(stamp)',
-                      reading.type, reading.id, reading.ms, reading.stamp))
-    end
-
-
+    -- (match until space), then all spaces, (then everythin after space)
+    local id, ms = line:match("(%S+)%s+(.+)")
+    print(string.format('%s : %s\r\n', id, ms))
+    local stamp = format('%0.f', now() * 1000) - ms
 
     -- if occupied do this:, otherwise save value in db
-    -- if type_t == "log" then
-    --    if id == "t1" then
-    --       put_blipv1(stamp, ms)
-    --    elseif id == "t2" then
-    --       put_blipv2(stamp, ms)
-    --    end
-    --    assert(db:run('put', id, stamp, ms))
-    -- elseif type_t == "state" then
-    --    -- FREE == 0, BUSY == 1
-    -- else
-    --    -- Wrong type - log the incident and the wrongly recieved data
-    --    logfile(format('## error, recieved %s(type), %s(id), %s(ms), %s(stamp)',
-    --                   type_t, id, ms))
-    -- end
+    if id == "t1" then
+       put_blipv1(stamp, ms)
+    elseif id == "t2" then
+       put_blipv2(stamp, ms)
+    end
+    assert(db:run('put', id, stamp, ms))
 
   end
   clients[self] = nil
@@ -160,47 +121,6 @@ local function socket_handler(client)
 end
 
 utils.spawn(socket.autospawn, socket, socket_handler)
-
-local function parse_reading(str)
-
-   local t = {}
-   -- match everything from &key = value&, excluding &.
-   for k, v in str:gmatch('([^&]+)=([^&]*)') do
-      print("parse_reading: ",k,v)
-      t[k] = v
-   end
-   return t
-end
-
-loop
-    local msg = parse_reading(line)
-    
-
-
-& type = state & state = true
-
-& type = log & id = t1 & ms = 10000
-
-& type = state & state = false
-
-id, stamp, ms
-
-
-
--- API calls
-
-
--- /blip&id=1
-OPTIONS('/blip(.*)$', apioptions)
-GETM('/blip(.*)$', function(req, res, qsraw)
-        -- Get the next blip
-
-        qs = parse_qs(qsraw)
-        apiheaders(res.headers)
-        -- get_blip queues and returns when a blip is received
-        local stamp, ms
-        if qs.id == "1" then
-
 
 
 local function sendfile(content, path)

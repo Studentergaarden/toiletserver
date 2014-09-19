@@ -1,7 +1,7 @@
 #+STARTUP: inlineimages -*- coding: utf-8 -*-
 
-* blipserver
-
+* toiletserver
+  
 ** About
 
 The server is written in [[http://www.lua.org][lua]] using the [[https://github.com/esmil/lem][Lua Event Machine]], along with the [[https://github.com/esmil/lem-streams][stream]]
