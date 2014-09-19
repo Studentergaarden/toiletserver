@@ -1,0 +1,18 @@
+#+STARTUP: inlineimages -*- coding: utf-8 -*-
+
+* blipserver
+
+** About
+
+The server is written in [[http://www.lua.org][lua]] using the [[https://github.com/esmil/lem][Lua Event Machine]], along with the [[https://github.com/esmil/lem-streams][stream]]
+and [[https://github.com/esmil/lem-postgres][PostgreSQL]] libraries for it.
+
+
+** API
+
+The servers response to an AJAX call can easily be checked by using =jason-xs= - which format it nicely - in the following way:
+
+#+BEGIN_SRC sh
+sudo apt-get libjson-xs-perl
+curl -s http://server-addr. | json-xs | less
+#+END_SRC
