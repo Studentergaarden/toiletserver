@@ -29,13 +29,23 @@ local bind_addr = string.sub(bind, 1, bind_colon-1)
 local bind_port = tonumber(string.sub(bind, bind_colon+1))
 
 
-local utils        = require 'lem.utils'
-local io           = require 'lem.io'
-local queue        = require 'lem.io.queue'
-local postgres     = require 'lem.postgres'
-local qpostgres    = require 'lem.postgres.queued'
-local httpserv     = require 'lem.http.server'
-local hathaway     = require 'lem.hathaway'
+local utils      = require 'lem.utils'
+local io         = require 'lem.io'
+local queue      = require 'lem.io.queue'
+local postgres   = require 'lem.postgres'
+local qpostgres  = require 'lem.postgres.queued'
+local httpserv   = require 'lem.http.server'
+local hathaway   = require 'lem.hathaway'
+
+local toilets    = require 'toilets'
+local get_toilet = toilets.get
+
+--local messages   = require 'messages'
+--local handle_msg = messages.handle
+
+local helpers    = require 'utils'
+local parse_qs   = helpers.parse_qs
+local parse_line   = helpers.parse_line
 
 local assert = assert
 local format = string.format
@@ -54,7 +64,6 @@ do
    function get_blipv1()
       n = n + 1;
       queue[n] = thisthread()
-
       return suspend()
    end
 
@@ -65,7 +74,6 @@ do
          resume(queue[i], stamp, ms)
          queue[i] = nil
       end
-
       n = 0
    end
 end
@@ -75,132 +83,117 @@ do
    local thisthread, suspend, resume
       = utils.thisthread, utils.suspend, utils.resume
    local queue, n = {}, 0
-
    function get_blipv2()
       n = n + 1;
       queue[n] = thisthread()
-
       return suspend()
    end
-
    function put_blipv2(stamp, ms)
       print(stamp, ms, n)
       for i = 1, n do
          resume(queue[i], stamp, ms)
          queue[i] = nil
       end
-
       n = 0
    end
 end
 
-local function logfile(message)
-   -- write message to file
-   local file = io.open("time-server.log", "a")
-   file:write(message)
-   file:flush()
-   file:close()
-end
 
-local function socket_handler(client)
-
-      local db = assert(postgres.connect(pg_connect_str))
-      local now = utils.now
-      assert(db:prepare('put', 'INSERT INTO toilets VALUES ($1, $2, $3)'))
-      local self = queue.wrap(client)
-      clients[self] = true
-
-  while true do
-    local line = client:read('*l')
-
-    if not line then break end
-
-    reading  = parse_reading(line)
-    -- Time toilet is occupied
-    reading.stamp = format('%0.f', now() * 1000) - reading.ms
-    --local stamp = format('%0.f', now() * 1000) - ms
-
-    if reading.type == "log" then
-       if reading.id == "t1" then
-          put_blipv1(stamp, ms)
-       elseif reading.id == "t2" then
-          put_blipv2(stamp, ms)
-       end
-       assert(db:run('put', reading.id, reading.stamp, reading.ms))
-    elseif reading.type == "state" then
-       -- FREE == 0, BUSY == 1
-       
-    else
-       -- Wrong type - log the incident and the wrongly recieved data
-       logfile(format('## error, recieved %s(type), %s(id), %s(ms), %s(stamp)',
-                      reading.type, reading.id, reading.ms, reading.stamp))
-    end
-
-
-
-    -- if occupied do this:, otherwise save value in db
-    -- if type_t == "log" then
-    --    if id == "t1" then
-    --       put_blipv1(stamp, ms)
-    --    elseif id == "t2" then
-    --       put_blipv2(stamp, ms)
-    --    end
-    --    assert(db:run('put', id, stamp, ms))
-    -- elseif type_t == "state" then
-    --    -- FREE == 0, BUSY == 1
-    -- else
-    --    -- Wrong type - log the incident and the wrongly recieved data
-    --    logfile(format('## error, recieved %s(type), %s(id), %s(ms), %s(stamp)',
-    --                   type_t, id, ms))
-    -- end
-
-  end
-  clients[self] = nil
-  client:close()
-end
-
-utils.spawn(socket.autospawn, socket, socket_handler)
-
-local function parse_reading(str)
-
-   local t = {}
-   -- match everything from &key = value&, excluding &.
-   for k, v in str:gmatch('([^&]+)=([^&]*)') do
-      print("parse_reading: ",k,v)
-      t[k] = v
+local pg_connect_str = 'user=powermeter dbname=powermeter'
+local db = assert(postgres.connect(pg_connect_str))
+assert(db:prepare('put', 'INSERT INTO toilets VALUES ($1, $2, $3)'))
+local msgtypes = {}
+function msgtypes.state(msg)
+   local t = get_toilet(msg.id)
+   if msg.state == 'true' or msg.state == "1" then
+      t:set_locked()
+   else
+      t:set_unlocked()
    end
-   return t
+   return true
 end
 
-loop
-    local msg = parse_reading(line)
-    
+function msgtypes.log(msg)
+   -- we got a log message
+   local t = get_toilet(msg.id)
+   t.ms = tonumber(msg.ms)
+   t.stamp = string.format('%0.f', utils.now() * 1000) - t.ms
+   -- save the duration of the last 5 visits
+   t.last_ms[#t.last_ms + 1] = t.ms
+   if #t.last_ms > 5 then
+      table.remove(t.last_ms,1)
+   end
+   assert(db:run('put', t.id, t.stamp, t.ms))
+   return true
+end
+
+local function handle_msg(msg)
+   msg.id = msg.id
+   local type = msg.type
+   local cb = msgtypes[type]
+   if not cb then
+      return nil, 'unknown command type - handle_msg'
+   end
+   -- return true if type is known
+   return cb(msg)
+end
 
 
-& type = state & state = true
+local inspect = require 'inspect'
+-- setup TCP server
+local function socket_handler(client)
+   local self = queue.wrap(client)
+   clients[self] = true
 
-& type = log & id = t1 & ms = 10000
+   while true do
+      local line = client:read('*l')
+      if not line then break end
+      print(line)
+      local msg, err = parse_line(line)
+      print(inspect(msg),err,'\n')
+      if not msg then
+         print(err, line)
+      else
+         local ret, err = handle_msg(msg)
+         if not ret then
+            print(err, line)
+         end
+      end
+   end
 
-& type = state & state = false
-
-id, stamp, ms
-
-
-
--- API calls
+   clients[self] = nil
+   client:close()
+end
 
 
--- /blip&id=1
-OPTIONS('/blip(.*)$', apioptions)
-GETM('/blip(.*)$', function(req, res, qsraw)
-        -- Get the next blip
+-- local function serial_handler()
 
-        qs = parse_qs(qsraw)
-        apiheaders(res.headers)
-        -- get_blip queues and returns when a blip is received
-        local stamp, ms
-        if qs.id == "1" then
+--    local serial = assert(io.open('/dev/blipduino', 'r'))
+--    -- local serial = assert(io.open('/dev/ttyACM0', 'r'))
 
+--    -- discard first two readings
+--    assert(serial:read('*l'))
+--    assert(serial:read('*l'))
+
+--    while true do
+--       local line = assert(serial:read('*l'))
+--       if not line then break end
+
+--       local msg, err = parse_line(line)
+--       if not msg then
+--          print(err, line)
+--       else
+--          local ret, err = handle_msg(msg)
+--          if not ret then
+--             print(err, line)
+--          end
+--       end
+--    end
+-- end
+
+-- spawn TCP server and Serial listener
+utils.spawn(socket.autospawn, socket, socket_handler)
+-- utils.spawn(serial_handler)
 
 
 local function sendfile(content, path)
@@ -210,8 +203,8 @@ local function sendfile(content, path)
    end
 end
 
-hathaway.import()
 
+hathaway.import()
 GET('/',               sendfile('text/html; charset=UTF-8',       'index.html'))
 GET('/index.html',     sendfile('text/html; charset=UTF-8',       'index.html'))
 GET('/jquery.js',      sendfile('text/javascript; charset=UTF-8', 'jquery.js'))
@@ -235,7 +228,6 @@ end
 
 local function add_json(res, values)
    res:add('[')
-
    local n = #values -- #: length operator
    if n > 0 then
       for i = 1, n-1 do
@@ -245,7 +237,6 @@ local function add_json(res, values)
       local point = values[n]
       res:add('[%s,%s]', point[1], point[2])
    end
-
    res:add(']')
 end
 
@@ -261,34 +252,25 @@ assert(db:prepare('between', 'SELECT stamp, ms FROM toilets WHERE id = $1'
                      .. ' AND stamp >= $2 AND stamp <= $3'))
 
 
-local function urldecode(str)
-   --[[ URLs can only be sent over the Internet using the ASCII character-set.
-      Since URLs often contain characters outside the ASCII set, the URL has to
-      be converted into a valid ASCII format. This is done by 'percent-encoding'
-      where two hex-values represent a character. Space can be either + or %20.
-      If there's no hex-values in the string, this function does nothing.
-
-      see http://en.wikipedia.org/wiki/Percent-encoding and
-      http://www.w3schools.com/tags/ref_urlencode.asp ]]
-   return str:gsub('+', ' '):gsub('%%(%x%x)', function (str)
-                                     return string.char(tonumber(str, 16))
-                                 end)
-end
-
-local function parse_qs(str)
-   -- save the decoded keys and values into a table
-   local t = {}
-   -- match everything from &key = value&, excluding &.
-   for k, v in str:gmatch('([^&]+)=([^&]*)') do
-      print("parse: ",k,v)
-      t[urldecode(k)] = urldecode(v)
-   end
-   return t
-end
-
-
 
 -- API calls
+
+-- /occupied&id=1
+OPTIONS('/occupied(.*)$', apioptions)
+GETM('/occupied(.*)$', function(req, res, qsraw)
+
+        local qs, err = parse_qs(qsraw)
+        if qs == nil then
+           print(err)
+           httpserv.bad_request(req, res)
+           return
+        end
+        -- print(inspect(qs))
+        local t = get_toilet(qs.id)
+        -- print(inspect(t))
+        apiheaders(res.headers)
+        res:add('[id: %s, locked: %s]',qs.id , t:is_locked())
+end)
 
 
 -- /blip&id=1
@@ -296,7 +278,12 @@ OPTIONS('/blip(.*)$', apioptions)
 GETM('/blip(.*)$', function(req, res, qsraw)
         -- Get the next blip
 
-        qs = parse_qs(qsraw)
+        local qs, err = parse_qs(qsraw)
+        if qs == nil then
+           print(err)
+           httpserv.bad_request(req, res)
+           return
+        end
         apiheaders(res.headers)
         -- get_blip queues and returns when a blip is received
         local stamp, ms
@@ -308,19 +295,20 @@ GETM('/blip(.*)$', function(req, res, qsraw)
         res:add('[%s,%s]', stamp, ms)
 end)
 
+
 -- /last&id=1 or /last&id=1&ms=val
 OPTIONS('/last(.*)$', apioptions)
 GETM('/last(.*)$', function(req, res, qsraw)
         -- get the latest blip OR
         -- get the last #ms blips
 
-       qs = parse_qs(qsraw)
-
-       if qs.id == nil then -- some error in the ajax call.
-          httpserv.bad_request(req, res)
-          return
-       end
-       apiheaders(res.headers)
+        local qs, err = parse_qs(qsraw)
+        if qs == nil then
+           print(err)
+           httpserv.bad_request(req, res)
+           return
+        end
+        apiheaders(res.headers)
 
        if qs.ms == nil then
           -- just get latest blip
