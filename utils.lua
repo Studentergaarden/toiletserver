@@ -48,10 +48,30 @@ function utils.parse_qs(str)
       -- print("parse: ",k,v)
       t[urldecode(k)] = urldecode(v)
    end
-   if not t.id then
-      return nil, 'No id in AJAX call - parse_qs: ' .. str
-   end
+   -- if not t.id then
+   --    return nil, 'No id in AJAX call - parse_qs: ' .. str
+   -- end
    return t
 end
+
+
+function utils.add_json_row(t)
+   d = {}
+   for k,v in pairs(t) do
+      if k == nil then
+      elseif k == 'id' then
+         d[k] = v --tonumber(v)
+         -- d2[v] = d
+      elseif k == 'last_ms' then
+         d[k] = v -- tonumber(v)
+      elseif k == 'locked' then
+         d[k] = v
+      elseif k == 'stamp' then
+         d[k] = tonumber(v)
+      end
+   end
+   return d
+end
+
 
 return utils

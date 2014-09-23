@@ -26,7 +26,6 @@ end
 
 function toilet:set_unlocked(ms)
    self.locked = false
-   -- log time to db
 end
 
 function toilet:is_locked()
@@ -67,5 +66,14 @@ function M.get(id)
    end
    return t
 end
+
+function M.get_readonly(id)
+   local t = toilets[id]
+   if not t then
+      return nil, "id does not exist"
+   end
+   return t
+end
+
 
 return M

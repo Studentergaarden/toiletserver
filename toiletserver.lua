@@ -2,11 +2,15 @@
 -- -*- coding: utf-8 -*-
 
 -- libjason-xs-perl
--- curl -s http | jason-xs
+-- curl -s http | json_xs
 
 -- netstat -lnptu | grep LISTEN | grep lem
 -- lsof -p 27490 | grep TCP
 -- nmap localhost
+
+-- test with http://toilet/ajax/shit
+
+
 
 local function usage()
    print('This is the Powermeter daemon')
@@ -36,7 +40,9 @@ local postgres   = require 'lem.postgres'
 local qpostgres  = require 'lem.postgres.queued'
 local httpserv   = require 'lem.http.server'
 local hathaway   = require 'lem.hathaway'
+local json       = require 'dkjson'
 
+package.path     = "/home/pawse/lua/toiletserver/?.lua;" .. package.path
 local toilets    = require 'toilets'
 local get_toilet = toilets.get
 
@@ -45,7 +51,8 @@ local get_toilet = toilets.get
 
 local helpers    = require 'utils'
 local parse_qs   = helpers.parse_qs
-local parse_line   = helpers.parse_line
+local parse_line = helpers.parse_line
+local add_json_row = helpers.add_json_row
 
 local assert = assert
 local format = string.format
@@ -98,6 +105,25 @@ do
    end
 end
 
+local get_dump, put_dump
+do
+   local thisthread, suspend, resume
+      = utils.thisthread, utils.suspend, utils.resume
+   local queue, n = {}, 0
+   function get_dump()
+      n = n + 1;
+      queue[n] = thisthread()
+      return suspend()
+   end
+   function put_dump(t)
+      for i = 1, n do
+         resume(queue[i], t)
+         queue[i] = nil
+      end
+      n = 0
+   end
+end
+
 
 local pg_connect_str = 'user=powermeter dbname=powermeter'
 local db = assert(postgres.connect(pg_connect_str))
@@ -110,6 +136,7 @@ function msgtypes.state(msg)
    else
       t:set_unlocked()
    end
+   put_dump(t)
    return true
 end
 
@@ -226,6 +253,19 @@ local function apioptions(req, res)
    res.status = 200
 end
 
+
+function add_json_table(list)
+   local d = {}
+   for k,v in pairs(list) do
+      d[v] = add_json_row(get_toilet(v))
+   end
+   local M = json.encode(d,
+                         { indent = true,
+                           keyorder = {'id','locked','stamp','last_ms'} })
+   return M
+end
+
+
 local function add_json(res, values)
    res:add('[')
    local n = #values -- #: length operator
@@ -240,6 +280,7 @@ local function add_json(res, values)
    res:add(']')
 end
 
+
 -- DB queries
 local db = assert(qpostgres.connect(pg_connect_str))
 assert(db:prepare('get', 'SELECT stamp, ms FROM toilets WHERE id = $1'
@@ -251,25 +292,40 @@ assert(db:prepare('usage', 'SELECT COUNT(*) FROM toilets WHERE id = $1'
 assert(db:prepare('between', 'SELECT stamp, ms FROM toilets WHERE id = $1'
                      .. ' AND stamp >= $2 AND stamp <= $3'))
 
-
-
 -- API calls
+
+-- /dump&id=1
+OPTIONS('/dump(.*)$', apioptions)
+GETM('/dump(.*)$', function(req, res, qsraw)
+
+        local qs, err = parse_qs(qsraw)
+        apiheaders(res.headers)
+        if qs.id == nil then
+           res:add('{}')
+        else
+           t = get_dump()
+           res:add('{id: %s, locked: %s, stamp: %s, last_ms: [%s]}',
+                   t.id, t:is_locked(), t.stamp, table.concat(t.last_ms,","))
+        end
+end)
 
 -- /occupied&id=1
 OPTIONS('/occupied(.*)$', apioptions)
 GETM('/occupied(.*)$', function(req, res, qsraw)
 
         local qs, err = parse_qs(qsraw)
-        if qs == nil then
-           print(err)
-           httpserv.bad_request(req, res)
-           return
-        end
-        -- print(inspect(qs))
-        local t = get_toilet(qs.id)
-        -- print(inspect(t))
         apiheaders(res.headers)
-        res:add('[id: %s, locked: %s]',qs.id , t:is_locked())
+        if qs.id == nil then
+           local toilet_list = {'t1', 't2', 'b1', 'b2', 'b3'}
+           res:add('%s',add_json_table(toilet_list))
+           -- print(err)
+           -- httpserv.bad_request(req, res)
+           -- return
+        else
+           local t = get_toilet(qs.id)
+           res:add('{id: %s, locked: %s, stamp: %s, last_ms: [%s]}',
+                   t.id, t:is_locked(), t.stamp, table.concat(t.last_ms,","))
+        end
 end)
 
 
