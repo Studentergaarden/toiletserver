@@ -53,12 +53,13 @@
 
       <div class="starter-template">
         <!-- Næste mål er at lave det bootstrap smart -->
+            {{toilets.length}}
         <table width="100%">
           <tr>
-            <td ng-repeat="t in toilets">
-              <a href="#/bad/{{t.id}}">
-                <img ng-src="img/occupied_{{t.locked}}.png" />
-                <div ng-repeat="tid in t.last_ms">
+            <td ng-repeat="(id, val) in toilets">
+              <a href="#/bad/{{val.id}}">
+                <img ng-src="img/occupied_{{val.locked}}.png" />
+                <div ng-repeat="tid in val.last_ms">
                   {{tid / 1000 | number : 0}} sek ({{tid / 60000 | number : 0}} min)<br />
                 </div>
               </a>
