@@ -63,7 +63,9 @@ function utils.add_json_row(t)
          d[k] = v --tonumber(v)
          -- d2[v] = d
       elseif k == 'last_ms' then
-         d[k] = v -- tonumber(v)
+         d[k] = v --tonumber(v)
+      elseif k == 'last_stamp' then
+         d[k] = v --tonumber(v)
       elseif k == 'locked' then
          d[k] = v
       elseif k == 'stamp' then

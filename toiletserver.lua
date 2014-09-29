@@ -150,18 +150,19 @@ function msgtypes.log(msg)
    -- save the duration of the last 5 visits
 
    t.last_ms[#t.last_ms + 1] = t.ms
-   t.last_stamp[#t.last_ms + 1] = t.stamp
+   t.last_stamp[#t.last_stamp + 1] = t.stamp
    if #t.last_ms > 1 then
       for i = #t.last_ms,2,-1 do
          t.last_ms[i] = t.last_ms[i-1]
+         t.last_stamp[i] = t.last_stamp[i-1]
       end
    end
    if #t.last_ms > 5 then
       table.remove(t.last_ms,#t.last_ms)
-      table.remove(t.last_stamp,#t.last_ms)
+      table.remove(t.last_stamp,#t.last_stamp)
    end
    t.last_ms[1] = t.ms
-   t.last_stamp[1] = t.ms
+   t.last_stamp[1] = t.stamp
 
    assert(db:run('put', t.id, t.stamp, t.ms))
    return true
@@ -317,8 +318,8 @@ GETM('/dump(.*)$', function(req, res, qsraw)
            res:add('{}')
         else
            t = get_dump()
-           res:add('{"id": "%s", "locked": %s, "stamp_state": %s, "stamp": %s, "last_ms": [%s]}',
-                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_ms,","))
+           res:add('{"id": "%s", "locked": %s, "stamp_state": %s, "stamp": %s, "last_stamp": [%s], "last_ms": [%s]}',
+                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_stamp,","), table.concat(t.last_ms,","))
         end
 end)
 
@@ -336,8 +337,8 @@ GETM('/occupied(.*)$', function(req, res, qsraw)
            -- return
         else
            local t = get_toilet(qs.id)
-           res:add('{"id": %s, "locked": %s, "stamp_state": %s, "stamp": %s, "last_ms": [%s]}',
-                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_ms,","))
+           res:add('{"id": "%s", "locked": %s, "stamp_state": %s, "stamp": %s, "last_stamp": [%s], "last_ms": [%s]}',
+                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_stamp,","), table.concat(t.last_ms,","))
         end
 end)
 
