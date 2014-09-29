@@ -42,7 +42,8 @@ local httpserv   = require 'lem.http.server'
 local hathaway   = require 'lem.hathaway'
 local json       = require 'dkjson'
 
-package.path     = "/home/pawse/lua/toiletserver/?.lua;" .. package.path
+package.path     = "/home/pawse/lua/toiletserver/lua/?.lua;" .. package.path
+package.path     = "lua/?.lua;" .. package.path
 local toilets    = require 'toilets'
 local get_toilet = toilets.get
 
@@ -136,6 +137,7 @@ function msgtypes.state(msg)
    else
       t:set_unlocked()
    end
+   t.stamp_state = string.format('%0.f', utils.now() * 1000)
    put_dump(t)
    return true
 end
@@ -261,7 +263,7 @@ function add_json_table(list)
    end
    local M = json.encode(d,
                          { indent = true,
-                           keyorder = {'id','locked','stamp','last_ms'} })
+                           keyorder = {'id','locked','last_state','stamp','last_ms'} })
    return M
 end
 
@@ -304,8 +306,8 @@ GETM('/dump(.*)$', function(req, res, qsraw)
            res:add('{}')
         else
            t = get_dump()
-           res:add('{id: %s, locked: %s, stamp: %s, last_ms: [%s]}',
-                   t.id, t:is_locked(), t.stamp, table.concat(t.last_ms,","))
+           res:add('{"id": "%s", "locked": %s, "stamp_state": %s, "stamp": %s, "last_ms": [%s]}',
+                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_ms,","))
         end
 end)
 
@@ -323,8 +325,8 @@ GETM('/occupied(.*)$', function(req, res, qsraw)
            -- return
         else
            local t = get_toilet(qs.id)
-           res:add('{id: %s, locked: %s, stamp: %s, last_ms: [%s]}',
-                   t.id, t:is_locked(), t.stamp, table.concat(t.last_ms,","))
+           res:add('{"id": %s, "locked": %s, "stamp_state": %s, "stamp": %s, "last_ms": [%s]}',
+                   t.id, t:is_locked(), t.stamp_state, t.stamp, table.concat(t.last_ms,","))
         end
 end)
 

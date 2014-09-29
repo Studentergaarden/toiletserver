@@ -68,6 +68,8 @@ function utils.add_json_row(t)
          d[k] = v
       elseif k == 'stamp' then
          d[k] = tonumber(v)
+      elseif k == 'stamp_state' then
+         d[k] = tonumber(v)
       end
    end
    return d
