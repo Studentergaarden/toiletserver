@@ -2,7 +2,13 @@ angular.module('toiletFilter', []).filter('time', function() {
 	return function(input) {
 	  return input > 5000 ? '\u2713' : '\u2718';
 	};
+}).filter('dateFormat', function() {
+	return function(input) {
+	  return input > 5000 ? '\u2713' : '\u2718';
+	};
 });
+
+
 var toiletApp = angular.module('toiletApp', ['toiletFilter']);
 
 toiletApp.controller('ToiletController', ['$scope', '$http',
