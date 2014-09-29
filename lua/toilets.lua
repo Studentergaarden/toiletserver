@@ -54,6 +54,7 @@ local function new_toilet(id)
          ms = nil,
          last_state,
          last_ms = {},
+         last_stamp = {},
    }, toilet)
 end
 

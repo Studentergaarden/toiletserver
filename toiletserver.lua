@@ -148,10 +148,21 @@ function msgtypes.log(msg)
    t.ms = tonumber(msg.ms)
    t.stamp = string.format('%0.f', utils.now() * 1000) - t.ms
    -- save the duration of the last 5 visits
+
    t.last_ms[#t.last_ms + 1] = t.ms
-   if #t.last_ms > 5 then
-      table.remove(t.last_ms,1)
+   t.last_stamp[#t.last_ms + 1] = t.stamp
+   if #t.last_ms > 1 then
+      for i = #t.last_ms,2,-1 do
+         t.last_ms[i] = t.last_ms[i-1]
+      end
    end
+   if #t.last_ms > 5 then
+      table.remove(t.last_ms,#t.last_ms)
+      table.remove(t.last_stamp,#t.last_ms)
+   end
+   t.last_ms[1] = t.ms
+   t.last_stamp[1] = t.ms
+
    assert(db:run('put', t.id, t.stamp, t.ms))
    return true
 end
