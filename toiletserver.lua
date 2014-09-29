@@ -40,10 +40,10 @@ local postgres   = require 'lem.postgres'
 local qpostgres  = require 'lem.postgres.queued'
 local httpserv   = require 'lem.http.server'
 local hathaway   = require 'lem.hathaway'
-local json       = require 'dkjson'
 
 package.path     = "/home/pawse/lua/toiletserver/lua/?.lua;" .. package.path
 package.path     = "lua/?.lua;" .. package.path
+local json       = require 'dkjson'
 local toilets    = require 'toilets'
 local get_toilet = toilets.get
 
