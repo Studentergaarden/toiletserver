@@ -53,14 +53,13 @@
 
       <div class="starter-template">
         <!-- Næste mål er at lave det bootstrap smart -->
-            {{toilets.length}}
         <table width="100%">
           <tr>
             <td ng-repeat="(id, val) in toilets">
               <a href="#/bad/{{val.id}}">
                 <img ng-src="img/occupied_{{val.locked}}.png" />
-                <div ng-repeat="tid in val.last_ms">
-                  {{ tid | time }}<br />
+                <div ng-repeat="tid in val.last_ms track by $index">
+                  {{ tid | timeFormat }} - {{ val.last_stamp[$index] | dateFormat }}<br />
                 </div>
               </a>
             </td>
@@ -71,8 +70,8 @@
             <td ng-repeat="s in showers">
               <a href="#/bad/{{s.id}}">
                 <img ng-src="img/occupied_{{s.locked}}.png" />
-                <div ng-repeat="tid in s.last_ms">
-                  {{ tid | time }}<br />
+                <div ng-repeat="tid in s.last_ms track by $index">
+                  {{ tid | timeFormat }} - {{ s.last_stamp[$index] | dateFormat }}<br />
                 </div>
               </a>
             </td>
