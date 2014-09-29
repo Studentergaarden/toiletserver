@@ -59,7 +59,7 @@
               <a href="#/bad/{{val.id}}">
                 <img ng-src="img/occupied_{{val.locked}}.png" />
                 <div ng-repeat="tid in val.last_ms track by $index">
-                  {{ tid | time }} - {{ val.last_stamp[$index] | dateFormat }}<br />
+                  {{ tid | timeFormat }} - {{ val.last_stamp[$index] | dateFormat }}<br />
                 </div>
               </a>
             </td>
@@ -71,7 +71,7 @@
               <a href="#/bad/{{s.id}}">
                 <img ng-src="img/occupied_{{s.locked}}.png" />
                 <div ng-repeat="tid in s.last_ms track by $index">
-                  {{ tid | time }} - {{ s.last_stamp[$index] | dateFormat }}<br />
+                  {{ tid | timeFormat }} - {{ s.last_stamp[$index] | dateFormat }}<br />
                 </div>
               </a>
             </td>

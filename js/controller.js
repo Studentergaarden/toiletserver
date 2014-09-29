@@ -1,8 +1,10 @@
-angular.module('toiletFilter', []).filter('time', function() {
+angular.module('toiletFilter', []).
+filter('timeFormat', function() {
 	return function(input) {
 	  return input > 5000 ? '\u2713' : '\u2718';
 	};
-}).filter('dateFormat', function() {
+}).
+filter('dateFormat', function() {
 	return function(input) {
 	  return input > 5000 ? '\u2713' : '\u2718';
 	};
