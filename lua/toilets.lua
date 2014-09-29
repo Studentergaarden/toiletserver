@@ -52,6 +52,7 @@ local function new_toilet(id)
          locked = false,
          stamp = nil,
          ms = nil,
+         last_state,
          last_ms = {},
    }, toilet)
 end

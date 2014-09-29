@@ -1,3 +1,5 @@
+-- -*- coding: utf-8 -*-
+
 local inspect = require 'inspect'
 -- https://github.com/kikito/inspect.lua.git
 -- evt kopier til /usr/local/lib/lua/5.2/inspect.lua
