@@ -25,10 +25,15 @@ filter('timeFormat', function() {
 }).
 filter('dateFormat', function() {
   return function(input) {
+    /* either return hours in time in UTC or - as commented - local timezone
+     * (below) */
+
+    /* Make sure everyone recieves the time exactly as it was on the server */
     timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
     var date = new Date(input - timezoneOffset);
-    // return date.getDate() + '.' + date.getMonth() + ' ' +
-    return  (date.getHours() - 2) + ':' + date.getMinutes();
+    return  (date.getUTCHours()) + ':' + date.getMinutes();
+    // var date = new Date(input);
+    // return  (date.getHours()) + ':' + date.getMinutes();
   };
 });
 
