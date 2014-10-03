@@ -73,12 +73,15 @@ function ajaxListener(id, $scope, $http){
 	console.log(id);
 	$http({method: 'GET', url: str_url + 'dump&id='+id}).
 		success(function(data, status, headers, config) {
-			$scope.toilets[data.id] = data;
+			if(data.id == "t1" || data.id == "t2"){
+				$scope.toilets[data.id] = data;
+			}else{
+				$scope.showers[data.id] = data;
+			}
 			ajaxListener(data.id, $scope, $http);
-			console.log("adsads");
 		}).
 	  	error(function(data, status, headers, config) {
-	 		console.log("Chaos Chaos Chaos");
+	 		console.log("Something went wrong in ajaxListener:controller.js");
 		});
 }
 
