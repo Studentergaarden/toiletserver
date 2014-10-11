@@ -1,7 +1,6 @@
 'use strict';
 
-
-var root = "http://localhost/toiletserver/";
+var root = (true) ? "" : "http://localhost/toiletserver/";
 
 var toiletApp = angular.module('toiletApp', [
   'ngRoute',
@@ -12,7 +11,7 @@ toiletApp.config(['$routeProvider',
     $routeProvider.
 
     when('/occupy', {
-      templateUrl: root + 'partials/occupyOverview.html',
+      templateUrl: root + '/partials/occupyOverview.html',
       controller: 'overviewController'
     }).
     when('/occupy/:Id', {

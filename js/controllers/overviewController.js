@@ -1,6 +1,6 @@
 'use strict';
 
-var loki = false;
+var loki = true;
 var str_url = '/ajax/';
 
 if (!loki){
