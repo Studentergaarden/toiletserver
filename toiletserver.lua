@@ -280,6 +280,27 @@ function add_json_table(list)
 end
 
 
+local function add_table(values)
+   local n = #values -- #: length operator
+   local ms_array = {}
+   local stamp_array = {}
+   if n > 0 then
+      for i = 1, n-1 do
+         local point = values[i]
+         table.insert(stamp_array, tonumber(point[1]))
+         table.insert(ms_array, tonumber(point[2]))
+      end
+      local point = values[n]
+      table.insert(stamp_array, tonumber(point[1]))
+      table.insert(ms_array, tonumber(point[2]))
+   end
+   t = {}
+   t[values[0][1]] = stamp_array
+   t[values[0][2]] = ms_array
+   return t
+end
+
+
 local function add_json(res, values)
    res:add('[')
    local n = #values -- #: length operator
@@ -401,16 +422,36 @@ OPTIONSM('^/since(.*)$', apioptions)
 GETM('^/since(.*)$', function(req, res, qsraw)
         -- get blips from a given time - MAX 2000 readings OR
         -- get blips from an interval
-
         qs = parse_qs(qsraw)
+
+        -- print(inspect(qsraw))
+        -- print(inspect(qs))
         -- if since is longer than 15 digit ...
-        if #qs.since > 15 then
-           httpserv.bad_request(req, res)
-           return
-        end
+        -- if #qs.since > 15 then
+        --    httpserv.bad_request(req, res)
+        --    return
+        -- end
         apiheaders(res.headers)
-        add_json(res, assert(db:run('get', qs.id, qs.since)))
+        local n = #qs.id
+        local tres = {}
+
+        for i = 1, n do
+           local blips = nil
+           local id = qs.id[i]
+           if qs.to == nil then
+              blips = assert(db:run('get', id, qs.from))
+           else
+              blips = assert(db:run('between', id, qs.from, qs.to))
+           end
+           local t = add_table(blips)
+           t.id = qs.id[i]
+           tres[t.id] = t
+        end
+        local json = json.encode(tres,{ indent = true})
+        res:add('%s',json)
+
 end)
+
 
 -- /usage&id=1&ms=val
 OPTIONS('/usage(.*)$', apioptions)

@@ -45,8 +45,18 @@ function utils.parse_qs(str)
    local t = {}
    -- match everything from &key = value&, excluding &.
    for k, v in str:gmatch('([^&]+)=([^&]*)') do
-      -- print("parse: ",k,v)
-      t[urldecode(k)] = urldecode(v)
+
+      k = urldecode(k)
+      v = urldecode(v)
+      -- if the key contains [], then we recieved something that needs to be
+      -- appended to an array
+      k, replaced = k:gsub("%[%]","")
+      if replaced > 0 or k == "id" then
+         if t[k] == nil then t[k] = {} end
+         table.insert(t[k],v)
+      else
+         t[k] = v
+      end
    end
    -- if not t.id then
    --    return nil, 'No id in AJAX call - parse_qs: ' .. str
@@ -62,6 +72,8 @@ function utils.add_json_row(t)
       elseif k == 'id' then
          d[k] = v --tonumber(v)
          -- d2[v] = d
+      elseif k == 'ms' then
+         d[k] = v --tonumber(v)
       elseif k == 'last_ms' then
          d[k] = v --tonumber(v)
       elseif k == 'last_stamp' then
