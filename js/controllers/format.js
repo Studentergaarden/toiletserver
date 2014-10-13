@@ -5,7 +5,7 @@ function addZ(n) {
   return (n<10? '0':'') + n;
 }
 
-angular.module('toiletFilter', []).
+angular.module('format', []).
 filter('timeFormat', function() {
   return function(input) {
 
