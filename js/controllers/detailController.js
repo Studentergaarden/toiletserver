@@ -17,23 +17,20 @@ toiletControllers.controller('detailController', ['$scope', '$routeParams', '$ht
 function($scope, $routeParams, $http, $filter, ngTableParams) {
 
 	var timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
-    
+    var hej = 23;
     $scope.from = ISODateString(new Date(Date.now() - timezoneOffset - 86400000));
     $scope.to = ISODateString(new Date(Date.now() - timezoneOffset));
     $scope.occuId = $routeParams.Id;
     
 	$scope.tableParams = new ngTableParams({
-        page: 1,            // show first page
-        count: 10,          // count per page
+        count: 0,          // count per page
         sorting: {
-        	name: 'asc'     // initial sorting
+        	stamp: 'desc'     // initial sorting
     	}
 	}, 
 	{
-    	getData: function($defer, params) {
-    		console.log(Date.parse($scope.to));
-    	
-    		$http({
+    	getData: function($defer, params) {    	
+    		$http({	
 		    	method: 'GET',
 		    	url: ajaxRoot + 'since&'+$.param(
 						{
@@ -43,16 +40,14 @@ function($scope, $routeParams, $http, $filter, ngTableParams) {
 					    }
 		    		),
 		    }).success(function(data2) {
-
-		            // use build-in angular filter
 		            	var orderedData = params.sorting() ?
 		                                $filter('orderBy')(data2, params.orderBy()) :
 		                                data2;
 
-		            	$defer.resolve(orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count()));
+		            	$defer.resolve(orderedData.slice((params.page() - 1) * params.count(), data2.length));
 		      });
-
-		}
+		},
+		counts: []
 	});	  
 }]);  
 

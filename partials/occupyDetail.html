@@ -4,6 +4,9 @@
 	<button ng-click="tableParams.reload()" class="btn btn-default">Update</button>
 	<button ng-click="tableParams.sorting({})" class="btn btn-default pull-right">Clear sorting</button>
     <br /><br />
+
+    <div loading-container="tableParams.settings().$loading">
+    
   	<table ng-table="tableParams" class="table">
         <tr ng-repeat="entry in $data">
             <td data-title="'Id'" sortable="'id'">
@@ -17,6 +20,7 @@
             </td>
         </tr>
     </table>
+    </div>
 </div>
 
 
