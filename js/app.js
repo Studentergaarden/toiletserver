@@ -14,11 +14,11 @@ toiletApp.config(['$routeProvider',
     $routeProvider.
 
     when('/occupy', {
-      templateUrl: root + '/partials/occupyOverview.html',
+      templateUrl: root + 'partials/occupyOverview.html',
       controller: 'overviewController'
     }).
     when('/occupy/:Id', {
-      templateUrl: root + '/partials/occupyDetail.html',
+      templateUrl: root + 'partials/occupyDetail.html',
       controller: 'detailController'
     }).
     otherwise({

@@ -280,15 +280,36 @@ function add_json_table(list)
 end
 
 
+local function add_table(values)
+   local n = #values -- #: length operator
+   local ms_array = {}
+   local stamp_array = {}
+   if n > 0 then
+      for i = 1, n-1 do
+         local point = values[i]
+         table.insert(stamp_array, tonumber(point[1]))
+         table.insert(ms_array, tonumber(point[2]))
+      end
+      local point = values[n]
+      table.insert(stamp_array, tonumber(point[1]))
+      table.insert(ms_array, tonumber(point[2]))
+   end
+   t = {}
+   t[values[0][1]] = stamp_array
+   t[values[0][2]] = ms_array
+   return t
+end
+
+
 local function add_json_raw(res, id, values)
    local n = #values -- #: length operator
    if n > 0 then
       for i = 1, n-1 do
          local point = values[i]
-         res:add('{id:"%s",stamp:%s,ms:%s},', id, point[1], point[2])
+         res:add('{"id":"%s","stamp":%s,"ms":%s},', id, point[1], point[2])
       end
       local point = values[n]
-      res:add('{id:"%s",stamp:%s,ms:%s}', id, point[1], point[2])
+      res:add('{"id":"%s","stamp":%s,"ms":%s}', id, point[1], point[2])
    end
 end
 
@@ -419,10 +440,10 @@ GETM('^/since(.*)$', function(req, res, qsraw)
         -- print(inspect(qsraw))
         -- print(inspect(qs))
         -- if since is longer than 15 digit ...
-        -- if #qs.since > 15 then
-        --    httpserv.bad_request(req, res)
-        --    return
-        -- end
+        if (qs.id == nil) then
+           httpserv.bad_request(req, res)
+           return
+        end
         apiheaders(res.headers)
         local n = #qs.id
         local tres = {}
