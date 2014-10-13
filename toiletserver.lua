@@ -280,24 +280,16 @@ function add_json_table(list)
 end
 
 
-local function add_table(values)
+local function add_json_raw(res, id, values)
    local n = #values -- #: length operator
-   local ms_array = {}
-   local stamp_array = {}
    if n > 0 then
       for i = 1, n-1 do
          local point = values[i]
-         table.insert(stamp_array, tonumber(point[1]))
-         table.insert(ms_array, tonumber(point[2]))
+         res:add('{id:"%s",stamp:%s,ms:%s},', id, point[1], point[2])
       end
       local point = values[n]
-      table.insert(stamp_array, tonumber(point[1]))
-      table.insert(ms_array, tonumber(point[2]))
+      res:add('{id:"%s",stamp:%s,ms:%s}', id, point[1], point[2])
    end
-   t = {}
-   t[values[0][1]] = stamp_array
-   t[values[0][2]] = ms_array
-   return t
 end
 
 
@@ -435,6 +427,7 @@ GETM('^/since(.*)$', function(req, res, qsraw)
         local n = #qs.id
         local tres = {}
 
+        res:add('[')
         for i = 1, n do
            local blips = nil
            local id = qs.id[i]
@@ -443,12 +436,12 @@ GETM('^/since(.*)$', function(req, res, qsraw)
            else
               blips = assert(db:run('between', id, qs.from, qs.to))
            end
-           local t = add_table(blips)
-           t.id = qs.id[i]
-           tres[t.id] = t
+           add_json_raw(res, qs.id[i], blips)
+           if i < n and n > 1 then
+              res:add(',')
+           end
         end
-        local json = json.encode(tres,{ indent = true})
-        res:add('%s',json)
+        res:add(']')
 
 end)
 
