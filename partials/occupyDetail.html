@@ -1,18 +1,19 @@
 <div class="container"> 
-	 <button ng-click="tableParams.sorting({})" class="btn btn-default pull-right">Clear sorting</button>
-    <p><strong>Sorting:</strong> {{tableParams.sorting() | json}}
-
-
+    <input type="datetime-local" ng-model="from">
+    <input type="datetime-local" ng-model="to">
+	<button ng-click="tableParams.reload()" class="btn btn-default">Update</button>
+	<button ng-click="tableParams.sorting({})" class="btn btn-default pull-right">Clear sorting</button>
+    <br /><br />
   	<table ng-table="tableParams" class="table">
         <tr ng-repeat="entry in $data">
-            <td data-title="'Name'" sortable="'name'">
+            <td data-title="'Id'" sortable="'id'">
                 {{entry.id}}
             </td>
-            <td data-title="'Age'" sortable="'age'">
-                {{entry.stamp}}
+            <td data-title="'Date'" sortable="'stamp'">
+                {{entry.stamp | dateFormat}}
             </td>
-            <td data-title="'Age'" sortable="'age'">
-                {{entry.ms}}
+            <td data-title="'Duration'" sortable="'ms'">
+                {{entry.ms | timeFormat}}
             </td>
         </tr>
     </table>
