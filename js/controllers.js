@@ -1,14 +1,6 @@
 'use strict';
-// -*- coding: utf-8 -*-
 
-var loki = false;
-var str_url = '/ajax/';
-
-if (!loki){
-  str_url = 'http://toilet/ajax/';
-}
-
-var toiletControllers = angular.module('toiletControllers', ['toiletFilter']);
+var toiletControllers = angular.module('toiletControllers', ['ngTable','toiletFilter']);
 
 toiletControllers.controller('overviewController', ['$scope','$http', '$routeParams',
   function($scope, $http, $routeParams) {

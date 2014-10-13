@@ -1,6 +1,21 @@
+<div class="container"> 
+	 <button ng-click="tableParams.sorting({})" class="btn btn-default pull-right">Clear sorting</button>
+    <p><strong>Sorting:</strong> {{tableParams.sorting() | json}}
 
-  <div> 
-  Vis detalier om {{Id}}<br />
-  </div>
+
+  	<table ng-table="tableParams" class="table">
+        <tr ng-repeat="entry in $data">
+            <td data-title="'Name'" sortable="'name'">
+                {{entry.id}}
+            </td>
+            <td data-title="'Age'" sortable="'age'">
+                {{entry.stamp}}
+            </td>
+            <td data-title="'Age'" sortable="'age'">
+                {{entry.ms}}
+            </td>
+        </tr>
+    </table>
+</div>
 
 

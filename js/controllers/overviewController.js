@@ -1,17 +1,10 @@
 'use strict';
 
-var loki = true;
-var str_url = '/ajax/';
+var toiletControllers = angular.module('toiletControllers', ['format','ngTable','ngResource']);
 
-if (!loki){
-  str_url = 'http://toilet/ajax/';
-}
-
-var toiletControllers = angular.module('toiletControllers', ['toiletFilter']);
-
-toiletControllers.controller('overviewController', ['$scope','$http', '$routeParams',
-  function($scope, $http, $routeParams) {
-    $http.get(str_url + 'occupied').success(function(data) {
+toiletControllers.controller('overviewController', ['$scope','$http',
+  function($scope, $http) {
+    $http.get(ajaxRoot + 'occupied').success(function(data) {
       $scope.toilets = {};
       $scope.showers = {};
 
@@ -27,7 +20,7 @@ toiletControllers.controller('overviewController', ['$scope','$http', '$routePar
 }]);
 
 function ajaxListener(id, $scope, $http){
-  $http({method: 'GET', url: str_url + 'dump&id='+id}).
+  $http({method: 'GET', url: ajaxRoot + 'dump&id='+id}).
     success(function(data, status, headers, config) {
       $scope.toilets[data.id] = data;
       ajaxListener(data.id, $scope, $http);

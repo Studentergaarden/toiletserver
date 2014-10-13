@@ -1,6 +1,9 @@
 'use strict';
 
-var root = (true) ? "" : "http://localhost/toiletserver/";
+var online = false;
+var root = (online) ? "/" : "http://localhost/toiletserver/";
+var ajaxRoot = (online) ? '/ajax/' : 'http://toilet/ajax/';
+
 
 var toiletApp = angular.module('toiletApp', [
   'ngRoute',
