@@ -22,7 +22,11 @@ toiletControllers.controller('overviewController', ['$scope','$http',
 function ajaxListener(id, $scope, $http){
   $http({method: 'GET', url: ajaxRoot + 'dump&id='+id}).
     success(function(data, status, headers, config) {
-      $scope.toilets[data.id] = data;
+      if(data.id == "t1" || data.id == "t2"){
+        $scope.toilets[data.id] = data;
+      }else{
+        $scope.showers[data.id] = data;
+      }
       ajaxListener(data.id, $scope, $http);
     }).
       error(function(data, status, headers, config) {
