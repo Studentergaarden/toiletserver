@@ -11,3 +11,8 @@ body {
     border: 1px solid #000;
 }
 
+#occupiedBox{
+	background-color: green;
+	height: 100px;
+	width: 100px;
+}

@@ -2,12 +2,15 @@
   <table width="100%">
     <tr>
       <td ng-repeat="(id, val) in toilets">
-        <a href="#/occupy/{{val.id}}">
+        <div id="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}}">
+          {{duration}}
+        </div>
+        <!--a href="#/occupy/{{val.id}}">
           <img ng-src="img/occupied_{{val.locked}}.png" />
           <div ng-repeat="tid in val.last_ms track by $index">
             {{ val.last_stamp[$index] | dateFormat}} - {{ tid | timeFormat }}<br />
           </div>
-        </a>
+        </a-->
       </td>
     </tr>
   </table><br />

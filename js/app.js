@@ -1,6 +1,6 @@
 'use strict';
 
-var online = true;
+var online = false;
 var root = (online) ? "/" : "http://localhost/toiletserver/";
 var ajaxRoot = (online) ? '/ajax/' : 'http://toilet/ajax/';
 
