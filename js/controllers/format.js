@@ -1,5 +1,5 @@
-'use strict';
 // -*- coding: utf-8 -*-
+'use strict';
 
 function addZ(n) {
   return (n<10? '0':'') + n;
@@ -20,8 +20,6 @@ filter('timeFormat', function() {
     else
       timeStr = secs + ' sek';
     return timeStr;
-
-    //return (hrs) + ':' + (mins) + ':' + (secs);
   };
 }).
 filter('dateFormat', function() {
@@ -33,7 +31,14 @@ filter('dateFormat', function() {
     var timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
     var date = new Date(input - timezoneOffset);
     return  addZ(date.getUTCHours()) + ':' + addZ(date.getMinutes());
-    // var date = new Date(input);
-    // return  (date.getHours()) + ':' + date.getMinutes();
+  };
+}).
+filter('dateFormatDetail', function() {
+  return function(input) {
+
+    var timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
+    var date = new Date(input - timezoneOffset);
+    return addZ(date.getDate()) + '/' + addZ(date.getMonth() + 1) + ' ' +
+      addZ(date.getUTCHours()) + ':' + addZ(date.getMinutes());
   };
 });

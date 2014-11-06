@@ -1,3 +1,4 @@
+// -*- coding: utf-8 -*-
 'use strict';
 
 var online = false;

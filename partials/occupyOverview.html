@@ -1,5 +1,7 @@
+<!-- -*- coding: utf-8 -*- --!>
 <div class="container">
   <table width="100%">
+    <h2><center>Toilets</center></h2>
     <tr>
       <td ng-repeat="(id, val) in toilets">
         <div id="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}}">
@@ -15,6 +17,7 @@
     </tr>
   </table><br />
   <table width="100%">
+    <h2><center>Showers</center></h2>
     <tr>
       <td ng-repeat="(id, val) in showers">
         <a href="#/occupy/{{val.id}}">
@@ -26,5 +29,4 @@
       </td>
     </tr>
   </table>
-  
 </div>

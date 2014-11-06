@@ -1,17 +1,19 @@
+// -*- coding: utf-8 -*-
 'use strict';
 
+
+function pad(n){return n<10 ? '0'+n : n}
+
 function ISODateString(d){
- 
+
  return d.getUTCFullYear()+'-'
       + pad(d.getUTCMonth()+1)+'-'
       + pad(d.getUTCDate())+'T'
       + pad(d.getUTCHours())+':'
       + pad(d.getUTCMinutes())+':'
       + pad(d.getUTCSeconds());
-
   }
 
- function pad(n){return n<10 ? '0'+n : n}
 
 toiletControllers.controller('detailController', ['$scope', '$routeParams', '$http', '$filter', 'ngTableParams',
 function($scope, $routeParams, $http, $filter, ngTableParams) {
