@@ -1,32 +1,42 @@
-<!-- -*- coding: utf-8 -*- --!>
+<!-- -*- coding: utf-8 -*- -->
 <div class="container">
-  <table width="100%">
+
     <h2><center>Toilets</center></h2>
-    <tr>
-      <td ng-repeat="(id, val) in toilets">
-        <div id="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}}">
-          {{duration}}
+  <div class="occupiedBoxes">
+    <div ng-repeat="(id, val) in toilets">
+      <a href="#/occupy/{{val.id}}">
+        <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
+            <span class="vlignCenter"> 
+              {{val.timeLocked | timeFormat}}   
+            </span> 
         </div>
-        <!--a href="#/occupy/{{val.id}}">
-          <img ng-src="img/occupied_{{val.locked}}.png" />
-          <div ng-repeat="tid in val.last_ms track by $index">
-            {{ val.last_stamp[$index] | dateFormat}} - {{ tid | timeFormat }}<br />
-          </div>
-        </a-->
-      </td>
-    </tr>
-  </table><br />
-  <table width="100%">
-    <h2><center>Showers</center></h2>
-    <tr>
-      <td ng-repeat="(id, val) in showers">
-        <a href="#/occupy/{{val.id}}">
-          <img ng-src="img/occupied_{{val.locked}}.png" />
-          <div ng-repeat="tid in val.last_ms track by $index">
-            {{ val.last_stamp[$index] | dateFormat }} - {{ tid | timeFormat }}<br />
-          </div>
-        </a>
-      </td>
-    </tr>
-  </table>
+        <table width="120px">
+          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; border: 1px; text-align: right;">
+            <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>
+            <td width="60%">{{ tid | timeFormat }}</td>
+          </tr>
+        </table>
+      </a>
+    </div>
+  </div>
+
+  <br />
+  <h2><center>Showers</center></h2>
+  <div class="occupiedBoxes" >
+    <div ng-repeat="(id, val) in showers">
+      <a href="#/occupy/{{val.id}}">
+        <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
+            <span class="vlignCenter"> 
+              {{val.timeLocked | timeFormat}}
+            </span> 
+        </div>
+        <table width="120px">
+          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; border: 1px; text-align: right;">
+            <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>
+            <td width="60%">{{ tid | timeFormat }}</td>
+          </tr>
+        </table>
+      </a>
+    </div>
+  </div>
 </div>

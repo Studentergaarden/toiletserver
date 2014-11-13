@@ -3,16 +3,50 @@ body {
 }
 
 .starter-template {
-  padding: 40px 15px;
-//  text-align: center;
+	text-align: center;
 }
 
 .ng-table {
     border: 1px solid #000;
+	text-align: center;
 }
 
-#occupiedBox{
-	background-color: green;
+.occupiedBox{
+	width: 120px;
 	height: 100px;
-	width: 100px;
+ 	line-height: 100px;
+}
+.occupiedBoxes > div{
+	display: inline-block;
+	vertical-align: top;
+	padding-left: 70px;
+	padding-right: 70px;
+	color: white;
+
+	/* IE fix. */
+	*display: inline;
+	zoom: 1;
+}
+
+.occupiedBoxes:after {
+	width: 100%;
+	display: inline-block;
+}
+
+.occupiedBoxes{
+	width: 100%;
+}
+
+a:hover{
+	text-decoration: none;
+}
+a .occupiedBox{
+	color: white;
+}
+
+.vlignCenter{
+	display: inline-block;
+	vertical-align: middle;
+	line-height: normal;  
+	font-size: 18pt;
 }
