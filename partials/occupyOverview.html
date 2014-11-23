@@ -1,17 +1,16 @@
 <!-- -*- coding: utf-8 -*- -->
 <div class="container">
-
-    <h2><center>Toilets</center></h2>
+  <h2><center>Toilets</center></h2>
   <div class="occupiedBoxes">
     <div ng-repeat="(id, val) in toilets">
       <a href="#/occupy/{{val.id}}">
         <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
-            <span class="vlignCenter"> 
-              {{val.timeLocked | timeFormat}}   
-            </span> 
+          <span class="vlignCenter"> 
+            {{val.timeLocked | timeFormat}}   
+          </span> 
         </div>
         <table width="120px">
-          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; border: 1px; text-align: right;">
+          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; text-align: right;">
             <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>
             <td width="60%">{{ tid | timeFormat }}</td>
           </tr>
@@ -27,11 +26,11 @@
       <a href="#/occupy/{{val.id}}">
         <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
             <span class="vlignCenter"> 
-              {{val.timeLocked | timeFormat}}
-            </span> 
+            {{val.timeLocked | timeFormat}}
+          </span> 
         </div>
         <table width="120px">
-          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; border: 1px; text-align: right;">
+          <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; text-align: right;">
             <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>
             <td width="60%">{{ tid | timeFormat }}</td>
           </tr>

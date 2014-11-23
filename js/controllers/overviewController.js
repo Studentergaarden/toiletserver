@@ -12,7 +12,6 @@ toiletControllers.controller('overviewController', ['$scope','$http',
       var date = new Date();
       var now = date.getTime();
 
-
       angular.forEach(data, function(value, key) {
         if(value.id == "t1" || value.id == "t2"){
           $scope.toilets[value.id] = value;
@@ -23,7 +22,6 @@ toiletControllers.controller('overviewController', ['$scope','$http',
          }
         ajaxListener(value.id, $scope, $http);
       });
-      console.log($scope.toilets["t1"]);
       
       var timer = setInterval(function(){
         for (var key in $scope.toilets){
