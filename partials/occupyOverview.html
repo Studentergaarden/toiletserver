@@ -31,6 +31,8 @@
             {{val.timeLocked | timeFormat}}
           </span> 
         </div>
+      </a>
+      <a href="#/occupy/{{val.id}}">
         <table width="120px">
           <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; text-align: right;">
             <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>

@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 'use strict';
 
-var online = false;
+var online = true;
 var root = (online) ? "/" : "http://localhost/toiletserver/";
 var ajaxRoot = (online) ? '/ajax/' : 'http://toilet/ajax/';
 

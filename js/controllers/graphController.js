@@ -2,7 +2,7 @@
 'use strict';
 
 toiletControllers.controller('graphController', ['$scope','$routeParams','$http',
-  	function($scope, $http) {
+  	function($scope, $routeParams, $http) {
 		var timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
 		
 		var beforeOneWeek = new Date(new Date().getTime() - 60 * 60 * 24 * 14 * 1000 - timezoneOffset)
@@ -30,7 +30,7 @@ toiletControllers.controller('graphController', ['$scope','$routeParams','$http'
   		
   		$http({
 	    	method: 'GET',
-	    	url: ajaxRoot + 'since&id[]=t1&' + params
+	    	url: ajaxRoot + 'since&id='+$routeParams.Id+'&' + params
 	    }).success(function(data) {
 			data.forEach(function(entry) {
 				var timeFromMonday = entry.stamp - lastMondayISO;
