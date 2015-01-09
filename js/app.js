@@ -1,7 +1,7 @@
 // -*- coding: utf-8 -*-
 'use strict';
 
-var online = true;
+var online = false;
 var root = (online) ? "/" : "http://localhost/toiletserver/";
 var ajaxRoot = (online) ? '/ajax/' : 'http://toilet/ajax/';
 
@@ -21,6 +21,10 @@ toiletApp.config(['$routeProvider',
     when('/occupy/:Id', {
       templateUrl: root + 'partials/occupyDetail.html',
       controller: 'detailController'
+    }).
+    when('/occupy/graph/:Id', {
+      templateUrl: root + 'partials/testGraf.html',
+      controller: 'graphController'
     }).
     otherwise({
       redirectTo: '/occupy'

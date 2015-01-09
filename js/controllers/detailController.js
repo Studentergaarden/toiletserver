@@ -17,9 +17,7 @@ function ISODateString(d){
 
 toiletControllers.controller('detailController', ['$scope', '$routeParams', '$http', '$filter', 'ngTableParams',
 function($scope, $routeParams, $http, $filter, ngTableParams) {
-
     var timezoneOffset = (new Date()).getTimezoneOffset() * 60000;
-    var hej = 23;
     $scope.from = ISODateString(new Date(Date.now() - timezoneOffset - 86400000));
     $scope.to = ISODateString(new Date(Date.now() - timezoneOffset));
     $scope.occuId = $routeParams.Id;

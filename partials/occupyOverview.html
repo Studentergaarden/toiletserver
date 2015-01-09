@@ -3,12 +3,14 @@
   <h2><center>Toilets</center></h2>
   <div class="occupiedBoxes">
     <div ng-repeat="(id, val) in toilets">
-      <a href="#/occupy/{{val.id}}">
+      <a href="#/occupy/graph/{{val.id}}">
         <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
           <span class="vlignCenter"> 
             {{val.timeLocked | timeFormat}}   
           </span> 
         </div>
+      </a>
+      <a href="#/occupy/{{val.id}}">
         <table width="120px">
           <tr ng-repeat="tid in val.last_ms track by $index" style="color: black; text-align: right;">
             <td width="40%">{{ val.last_stamp[$index] | dateFormat }}</td>
@@ -23,7 +25,7 @@
   <h2><center>Showers</center></h2>
   <div class="occupiedBoxes" >
     <div ng-repeat="(id, val) in showers">
-      <a href="#/occupy/{{val.id}}">
+      <a href="#/occupy/graph/{{val.id}}">
         <div class="occupiedBox" style="background-Color:{{val.locked ? 'red' : '#00FF00'}};">
             <span class="vlignCenter"> 
             {{val.timeLocked | timeFormat}}
