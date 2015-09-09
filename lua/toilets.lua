@@ -36,7 +36,7 @@ function toilet:get_name()
    if self.name then
       return self.name
    else
-      return string.format('number %d', self.id)
+      return string.format('%s', self.id)
    end
 end
 

@@ -47,6 +47,8 @@ local json       = require 'dkjson'
 local toilets    = require 'toilets'
 local get_toilet = toilets.get
 
+local inspect = require 'inspect'
+
 --local messages   = require 'messages'
 --local handle_msg = messages.handle
 
@@ -61,6 +63,18 @@ local tonumber = tonumber
 
 local socket = assert(io.tcp.listen('*', '5555'))
 local clients = {}
+
+table.reduce = function (list, fn)
+   local acc
+   for k, v in ipairs(list) do
+      if 1 == k then
+         acc = v
+      else
+         acc = fn(acc, v)
+      end
+   end
+   return acc
+end
 
 local get_blipv1, put_blipv1
 do
@@ -148,7 +162,7 @@ function msgtypes.log(msg)
    t.ms = tonumber(msg.ms)
    t.stamp = string.format('%0.f', utils.now() * 1000) - t.ms
    -- save the duration of the last 5 visits
-
+   -- put the newest first in the array
    t.last_ms[#t.last_ms + 1] = t.ms
    t.last_stamp[#t.last_stamp + 1] = t.stamp
    if #t.last_ms > 1 then
@@ -165,12 +179,30 @@ function msgtypes.log(msg)
    t.last_stamp[1] = t.stamp
 
    assert(db:run('put', t.id, t.stamp, t.ms))
+
+   -- send duration of stay to display
+   local id = t:get_name()
+   if (id == "t1" or  id == "t2") then
+      updateDisplay = true
+
+      -- calculate avg - using a lambda, eg sending the needed function to
+      -- table.reduce declared previously
+      local avg = table.reduce(t.last_ms,
+                               function (a, b)
+                                  return a + b
+                               end
+      )
+      avg = avg/#t.last_ms
+      displayString = string.format('log id=%s time=%d avg=%d\n', id, t.ms, avg)
+   end
+
    return true
 end
 
 local function handle_msg(msg)
    msg.id = msg.id
    local type = msg.type
+   -- cb: callback
    local cb = msgtypes[type]
    if not cb then
       return nil, 'unknown command type - handle_msg'
@@ -180,29 +212,35 @@ local function handle_msg(msg)
 end
 
 
-local inspect = require 'inspect'
+updateDisplay = nil
+displayString = nil
 -- setup TCP server
 local function socket_handler(client)
    local self = queue.wrap(client)
    clients[self] = true
+   print('client connected')
 
    while true do
       local line = client:read('*l')
       if not line then break end
       print(line)
       local msg, err = parse_line(line)
-      print(inspect(msg),err,'\n')
+      print(inspect(msg))
       if not msg then
          print(err, line)
       else
          local ret, err = handle_msg(msg)
          if not ret then
             print(err, line)
+         elseif updateDisplay then
+            client:write(displayString)
+            updateDisplay = nil
          end
       end
    end
 
    clients[self] = nil
+   print('client disconnected')
    client:close()
 end
 
