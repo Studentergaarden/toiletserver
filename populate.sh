@@ -14,9 +14,12 @@
 # eller med din browser
 
 
-loki=130.226.169.164
+loki=127.0.0.1
+loki=130.226.169.166
 
 list=('t1' 't2' 'b1' 'b2' 'b3');
+list=('t1' 't2');
+
 # if no input arguments
 if [ -z "$1" ]; then
     for i in {1..5}

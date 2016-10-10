@@ -1,14 +1,35 @@
 #!/usr/bin/env lem
 -- -*- coding: utf-8 -*-
 
--- libjason-xs-perl
--- curl -s http | json_xs
+--[[
+   Testing:
+   Setup netcat to listen to the relevant (TCP) port on the server.
+   In this case:
+   $ nc -l -vv -p 5555
 
--- netstat -lnptu | grep LISTEN | grep lem
--- lsof -p 27490 | grep TCP
--- nmap localhost
+   In case of gateway:
+   $ nc -l -vv -p 5555 -g 172.16.0.1
+   $ nc -l -k --broker 5555
 
--- test with http://toilet/ajax/shit
+   Connect to the server with:
+   $ nc loki 5555
+
+   Client sending:
+   id=t1&type=state&state=1
+   id=t2&type=log&ms=29561
+
+   Server sending:
+   log id=t1 time=123 avg=987 visits=30
+
+   netstat -lnptu | grep LISTEN | grep lem
+   lsof -p 27490 | grep TCP
+   nmap localhost
+   test with http://toilet/ajax/shit
+
+   or using
+   libjason-xs-perl
+   curl -s http | json_xs
+--]]
 
 
 
@@ -41,11 +62,13 @@ local qpostgres  = require 'lem.postgres.queued'
 local httpserv   = require 'lem.http.server'
 local hathaway   = require 'lem.hathaway'
 
-package.path     = "/home/pawse/lua/toiletserver/lua/?.lua;" .. package.path
+package.path     = "/home/paw/lua/toiletserver/lua/?.lua;" .. package.path
 package.path     = "lua/?.lua;" .. package.path
 local json       = require 'dkjson'
 local toilets    = require 'toilets'
 local get_toilet = toilets.get
+
+local inspect = require 'inspect'
 
 --local messages   = require 'messages'
 --local handle_msg = messages.handle
@@ -61,6 +84,18 @@ local tonumber = tonumber
 
 local socket = assert(io.tcp.listen('*', '5555'))
 local clients = {}
+
+table.reduce = function (list, fn)
+   local acc
+   for k, v in ipairs(list) do
+      if 1 == k then
+         acc = v
+      else
+         acc = fn(acc, v)
+      end
+   end
+   return acc
+end
 
 local get_blipv1, put_blipv1
 do
@@ -126,10 +161,31 @@ do
 end
 
 
-local pg_connect_str = 'user=powermeter dbname=powermeter'
-local db = assert(postgres.connect(pg_connect_str))
+-- DB queries
+local db = assert(qpostgres.connect(pg_connect_str))
 assert(db:prepare('put', 'INSERT INTO toilets VALUES ($1, $2, $3)'))
+--local db = assert(qpostgres.connect(pg_connect_str))
+assert(db:prepare('get', 'SELECT stamp, ms FROM toilets WHERE id = $1'
+                     .. ' AND stamp >= $2 ORDER BY stamp LIMIT 2000'))
+assert(db:prepare('last', 'SELECT stamp, ms FROM toilets WHERE id = $1'
+                     .. ' ORDER BY stamp DESC LIMIT 1'))
+assert(db:prepare('usage', 'SELECT COUNT(*) FROM toilets WHERE id = $1'
+                     .. ' AND stamp >= $2'))
+assert(db:prepare('between', 'SELECT stamp, ms FROM toilets WHERE id = $1'
+                     .. ' AND stamp >= $2 AND stamp <= $3'))
+
+--[[
+   -- alternative version of usage.
+   assert(db:prepare('n_visits', 'SELECT COUNT(*) FROM toilets WHERE id = $1'
+                      .. " AND stamp >= extract( epoch from (now()::date + interval '4 hour'))*1000"))
+--]]
 local msgtypes = {}
+
+function msgtypes.connected(msg)
+   print("Connected: " .. msg.id)
+   return true
+end
+
 function msgtypes.state(msg)
    local t = get_toilet(msg.id)
    if msg.state == 'true' or msg.state == "1" then
@@ -146,9 +202,10 @@ function msgtypes.log(msg)
    -- we got a log message
    local t = get_toilet(msg.id)
    t.ms = tonumber(msg.ms)
-   t.stamp = string.format('%0.f', utils.now() * 1000) - t.ms
+   t.stamp = tonumber( string.format('%0.f', utils.now() * 1000)) - t.ms
+   
    -- save the duration of the last 5 visits
-
+   -- put the newest first in the array
    t.last_ms[#t.last_ms + 1] = t.ms
    t.last_stamp[#t.last_stamp + 1] = t.stamp
    if #t.last_ms > 1 then
@@ -165,12 +222,66 @@ function msgtypes.log(msg)
    t.last_stamp[1] = t.stamp
 
    assert(db:run('put', t.id, t.stamp, t.ms))
+
+   -- send duration of stay to display
+   local id = t:get_name()
+   if (id == "t1" or  id == "t2") then
+      updateDisplay = true
+
+      -- get visits since last 05.00
+      -- get data table
+      local date = os.date("*t")
+      date["min"], date["sec"] = 0, 0
+      local hour = date["hour"]
+      if hour < 5 then
+	 -- after midnigth but before 05.00
+	 -- get previous day's date. No problem if day = 1, lua can handle day = 0
+	 date["day"] = date["day"] -1
+      end
+      local timestamp = os.time(date)*1000
+
+      local values = assert(db:run('get', id, timestamp))
+      -- avg from db-call. avg. since 05.00
+      local avg = 0
+      local n = #values -- #: length operator. Eg number of visits
+      if n > 0 then
+	 for i = 1, n-1 do
+	    local point = values[i]
+	    avg = avg + tonumber(point[2])
+	    -- print(point[1] .. ' : ' .. point[2])
+	 end
+	 local point = values[n]
+	 avg = avg + tonumber(point[2])
+      end
+      avg = math.floor(avg/n)
+      displayString = string.format('log id=%s time=%d avg=%d visits=%d\n',
+                                    id, t.ms, avg, n)
+
+      --[[
+	 Old implementation
+      local n = assert(db:run('usage', t.id, timestamp))[1]
+      n = tonumber( n[1])
+
+      -- calculate avg - using a lambda, eg sending the needed function to
+      -- table.reduce declared previously. Only consider values in the table, eg. no db-call
+      local avg = table.reduce(t.last_ms,
+                               function (a, b)
+                                  return a + b
+                               end
+      )
+      avg = avg/#t.last_ms
+      local values = assert(db:run('get', id, timestamp))
+      --]]
+
+   end
+
    return true
 end
 
 local function handle_msg(msg)
-   msg.id = msg.id
+   -- msg.id = msg.id
    local type = msg.type
+   -- cb: callback
    local cb = msgtypes[type]
    if not cb then
       return nil, 'unknown command type - handle_msg'
@@ -180,30 +291,35 @@ local function handle_msg(msg)
 end
 
 
-local inspect = require 'inspect'
+updateDisplay = nil
+displayString = nil
 -- setup TCP server
 local function socket_handler(client)
    local self = queue.wrap(client)
    clients[self] = true
-
+   print('client connected')
    while true do
       local line = client:read('*l')
       if not line then break end
-      print(line)
+      print("####\n" .. line)
       local msg, err = parse_line(line)
-      print(inspect(msg),err,'\n')
+      print(inspect(msg))
       if not msg then
          print(err, line)
       else
          local ret, err = handle_msg(msg)
          if not ret then
             print(err, line)
+         elseif updateDisplay then
+            client:write(displayString)
+            updateDisplay = nil
          end
       end
    end
 
    clients[self] = nil
    client:close()
+   print('client disconnected')
 end
 
 
@@ -328,17 +444,6 @@ local function add_json(res, values)
    res:add(']')
 end
 
-
--- DB queries
-local db = assert(qpostgres.connect(pg_connect_str))
-assert(db:prepare('get', 'SELECT stamp, ms FROM toilets WHERE id = $1'
-                     .. ' AND stamp >= $2 ORDER BY stamp LIMIT 2000'))
-assert(db:prepare('last', 'SELECT stamp, ms FROM toilets WHERE id = $1'
-                     .. ' ORDER BY stamp DESC LIMIT 1'))
-assert(db:prepare('usage', 'SELECT COUNT(*) FROM toilets WHERE id = $1'
-                     .. ' AND stamp >= $2'))
-assert(db:prepare('between', 'SELECT stamp, ms FROM toilets WHERE id = $1'
-                     .. ' AND stamp >= $2 AND stamp <= $3'))
 
 -- API calls
 

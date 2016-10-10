@@ -1,5 +1,9 @@
 -- -*- coding: utf-8 -*-
 
+--[[
+   Not in use. The same functionality is in toiletserver.lua
+--]]
+
 -- local postgres   = require 'lem.postgres'
 
 local utils      = require 'lem.utils'
