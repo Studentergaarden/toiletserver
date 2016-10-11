@@ -238,6 +238,7 @@ function msgtypes.log(msg)
 	 -- get previous day's date. No problem if day = 1, lua can handle day = 0
 	 date["day"] = date["day"] -1
       end
+      date["hour"] = 5
       local timestamp = os.time(date)*1000
 
       local values = assert(db:run('get', id, timestamp))

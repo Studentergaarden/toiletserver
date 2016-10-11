@@ -22,6 +22,10 @@ toiletApp.config(['$routeProvider',
       templateUrl: root + 'partials/occupyDetail.html',
       controller: 'detailController'
     }).
+    when('/occupy/graph/:Id', {
+      templateUrl: root + 'partials/testGraf.html',
+      controller: 'graphController'
+    }).
     otherwise({
       redirectTo: '/occupy'
     });
